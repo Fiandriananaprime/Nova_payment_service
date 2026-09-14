@@ -15,16 +15,21 @@
     <description>Nova_payment_service</description>
     <url/>
     <licenses>
-        <license/>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+            <distribution>repo</distribution>
+        </license>
     </licenses>
     <developers>
-        <developer/>
+        <developer>
+            <name>Fiandriananaprime</name>
+        </developer>
     </developers>
     <scm>
-        <connection/>
-        <developerConnection/>
-        <tag/>
-        <url/>
+        <url>https://github.com/Fiandriananaprime/Nova_payment_service</url>
+        <connection>scm:git:https://github.com/USERNAME/Nova_payment_service.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/Fiandriananaprime/Nova_payment_service.git</developerConnection>
     </scm>
     <properties>
         <java.version>17</java.version>
@@ -33,6 +38,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.stripe</groupId>
+            <artifactId>stripe-java</artifactId>
+            <version>33.4.2</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
