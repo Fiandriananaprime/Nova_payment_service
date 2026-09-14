@@ -1,0 +1,1 @@
+Payment microservice for NovaMarket, responsible for managing payment processing, payment status, transactions, and payment-related operations. Built with Spring Boot and designed to integrate securely with the NovaMarket order and checkout workflow.
