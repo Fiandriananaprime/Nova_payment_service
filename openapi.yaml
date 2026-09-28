@@ -1,0 +1,83 @@
+openapi: 3.0.3
+info:
+  title: NovaMarket Payment Service
+  description: Internal Spring Boot payment service contract. Public clients use NovaApiGateway.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3006
+    description: Local development
+tags:
+  - name: System
+    description: Common service health and monitoring endpoints
+paths:
+  /health:
+    get:
+      tags: [System]
+      operationId: getHealth
+      responses:
+        '200':
+          description: Service is running
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HealthResponse' }
+  /ready:
+    get:
+      tags: [System]
+      operationId: getReady
+      responses:
+        '200':
+          description: Service is ready
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReadyResponse' }
+        '503':
+          description: Service is not ready
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NotReadyResponse' }
+  /version:
+    get:
+      tags: [System]
+      operationId: getVersion
+      responses:
+        '200':
+          description: Version information
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VersionResponse' }
+  /metrics:
+    get:
+      tags: [System]
+      operationId: getMetrics
+      responses:
+        '200':
+          description: Prometheus metrics
+          content:
+            text/plain:
+              schema: { type: string }
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [ok] }
+    ReadyResponse:
+      type: object
+      required: [status, checks]
+      properties:
+        status: { type: string, enum: [ready] }
+        checks: { type: object, additionalProperties: { type: string } }
+    NotReadyResponse:
+      type: object
+      required: [status, checks]
+      properties:
+        status: { type: string, enum: [not_ready] }
+        checks: { type: object, additionalProperties: { type: string } }
+    VersionResponse:
+      type: object
+      required: [service, version, commit]
+      properties:
+        service: { type: string }
+        version: { type: string }
+        commit: { type: string }
