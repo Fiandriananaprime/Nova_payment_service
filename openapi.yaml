@@ -7,9 +7,101 @@ servers:
   - url: http://localhost:3006
     description: Local development
 tags:
+  - name: Provider callbacks
+    description: Authenticated MVola and Orange Money payment status notifications
+  - name: Internal payment orchestration
+    description: Service-to-service linking of initiated provider payments to local transactions
   - name: System
     description: Common service health and monitoring endpoints
 paths:
+  /webhooks/mvola/{callbackToken}:
+    put:
+      tags: [Provider callbacks]
+      operationId: receiveMvolaPaymentCallback
+      summary: Receive a final MVola payment callback
+      description: |
+        The callback token is a shared secret configured as `MVOLA_CALLBACK_TOKEN`. Configure the provider callback URL
+        as `https://<payment-service>/webhooks/mvola/{MVOLA_CALLBACK_TOKEN}`. The callback only changes a pending
+        transaction whose `provider_reference` matches `serverCorrelationId`. Repeated callbacks with the same final
+        status are acknowledged idempotently. Keep this path out of access logs.
+      parameters:
+        - name: callbackToken
+          in: path
+          required: true
+          description: Secret shared token; do not expose or log it.
+          schema: { type: string, minLength: 32 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MvolaCallback' }
+            example:
+              transactionStatus: completed
+              serverCorrelationId: 6747819c-bcae-4c0c-ba82-1b6c854ade1d
+              transactionReference: "000123456"
+      responses:
+        '200':
+          description: Callback applied or recognized as a duplicate
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProviderWebhookResponse' }
+        '401': { description: Callback token is invalid }
+        '404': { description: No matching MVola transaction }
+        '409': { description: Transaction already has a different final status }
+  /webhooks/orange-money:
+    post:
+      tags: [Provider callbacks]
+      operationId: receiveOrangeMoneyNotification
+      summary: Receive an Orange Money WebPay notification
+      description: |
+        The `notif_token` is matched against the SHA-256 hash saved when the WebPay request was initiated.
+        Register the provider response token through the internal linking endpoint before relying on this notification.
+        `SUCCESS` maps to `completed`; `FAILED` and `EXPIRED` map to `failed`. Repeated callbacks with the same
+        final status are acknowledged idempotently.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OrangeMoneyNotification' }
+            example:
+              status: SUCCESS
+              notif_token: provider-notification-token
+              txnid: MP260929.1148.D333D
+      responses:
+        '200':
+          description: Notification applied or recognized as a duplicate
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProviderWebhookResponse' }
+        '404': { description: Unknown notification token }
+        '409': { description: Transaction already has a different final status }
+  /internal/payments/{transactionId}/provider-payment:
+    put:
+      tags: [Internal payment orchestration]
+      operationId: registerProviderPaymentReference
+      summary: Link a provider payment to a pending transaction
+      description: |
+        Call this service-to-service endpoint after initiating the provider payment and before exposing the payment
+        confirmation URL. `providerReference` is the MVola `serverCorrelationId` or Orange `pay_token`.
+        For Orange Money, persist the returned `notif_token`; the service stores only its SHA-256 hash.
+      security:
+        - paymentServiceBearer: []
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProviderPaymentRegistration' }
+      responses:
+        '204': { description: Provider payment reference linked }
+        '400': { description: Invalid provider fields }
+        '401': { description: Internal service token is invalid }
+        '404': { description: Payment transaction not found }
+        '409': { description: Transaction is no longer pending or reference is already in use }
   /health:
     get:
       tags: [System]
@@ -56,7 +148,45 @@ paths:
             text/plain:
               schema: { type: string }
 components:
+  securitySchemes:
+    paymentServiceBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque service token
   schemas:
+    MvolaCallback:
+      type: object
+      additionalProperties: true
+      required: [transactionStatus, serverCorrelationId]
+      properties:
+        transactionStatus: { type: string, enum: [completed, failed] }
+        serverCorrelationId: { type: string, maxLength: 255 }
+        transactionReference: { type: string, maxLength: 255, nullable: true }
+    OrangeMoneyNotification:
+      type: object
+      additionalProperties: true
+      required: [status, notif_token]
+      properties:
+        status: { type: string, enum: [SUCCESS, FAILED, EXPIRED] }
+        notif_token: { type: string, maxLength: 255 }
+        txnid: { type: string, maxLength: 255, nullable: true }
+    ProviderPaymentRegistration:
+      type: object
+      additionalProperties: false
+      required: [provider, providerReference]
+      properties:
+        provider: { type: string, enum: [MVOLA, ORANGE_MONEY] }
+        providerReference: { type: string, maxLength: 255 }
+        notificationToken:
+          type: string
+          maxLength: 255
+          description: Required only for ORANGE_MONEY; never returned by this service.
+    ProviderWebhookResponse:
+      type: object
+      required: [status, duplicate]
+      properties:
+        status: { type: string, enum: [completed, failed] }
+        duplicate: { type: boolean }
     HealthResponse:
       type: object
       required: [status]
