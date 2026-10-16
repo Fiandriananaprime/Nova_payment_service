@@ -4,10 +4,12 @@ package org.example.nova_payment_service.service;
 import com.stripe.exception.StripeException;
 import lombok.RequiredArgsConstructor;
 import org.example.nova_payment_service.dto.CardDetails;
-import org.example.nova_payment_service.dto.CreatePaymentMethod;
+import org.example.nova_payment_service.validator.CreatePaymentMethod;
 import org.example.nova_payment_service.dto.PaymentMethodResponse;
 import org.example.nova_payment_service.entity.PaymentMethod;
 import org.example.nova_payment_service.entity.PaymentMethodType;
+import org.example.nova_payment_service.exception.InvalidCredentials;
+import org.example.nova_payment_service.exception.PaymentMethodNotFound;
 import org.example.nova_payment_service.mapper.PaymentMethodMapper;
 import org.example.nova_payment_service.provider.StripeProvider;
 import org.example.nova_payment_service.repository.PaymentRepository;
@@ -25,27 +27,6 @@ public class PaymentMethodService {
     private final PaymentMethodMapper mapper;
     private final StripeProvider stripeProvider;
     private final PhoneVerificationService phoneService;
-
-    @Transactional(readOnly = true)
-    public List<PaymentMethodResponse> getAll(UUID userId) {
-        return repository.findAllByUserId(userId)
-                .stream()
-                .map(mapper::toPaymentMethodResponse)
-                .toList();
-    }
-
-    @Transactional
-    public PaymentMethodResponse create(
-            UUID userId,
-            CreatePaymentMethod method
-    ) throws StripeException {
-
-        if (method.type() == PaymentMethodType.card) {
-            return createCard(userId, method);
-        }
-
-        return createMobile(userId, method);
-    }
 
     private PaymentMethodResponse createCard(
             UUID userId,
@@ -95,5 +76,43 @@ public class PaymentMethodService {
         phoneService.requestCode(userId, method.phone());
 
         return mapper.toPaymentMethodResponse(saved);
+    }
+    @Transactional(readOnly = true)
+    public List<PaymentMethodResponse> getAll(UUID userId) {
+        return repository.findAllByUserId(userId)
+                .stream()
+                .map(mapper::toPaymentMethodResponse)
+                .toList();
+    }
+
+    @Transactional
+    public PaymentMethodResponse create(
+            UUID userId,
+            CreatePaymentMethod method
+    ) throws StripeException {
+
+        if (method.type() == PaymentMethodType.card) {
+            return createCard(userId, method);
+        }
+
+        return createMobile(userId, method);
+    }
+
+    public void confirmVerification(
+            UUID userId,UUID paymentMethodId, String code
+    ){
+        PaymentMethod pm = repository.findByIdAndUserId(paymentMethodId,userId)
+                .orElseThrow(() -> new PaymentMethodNotFound("User dont match with payment method"));
+
+        if (pm.getPhone() == null || pm.getPhone().isBlank()) {
+            throw new PaymentMethodNotFound(
+                    "Payment method has no phone number"
+            );}
+        boolean valid = phoneService.verifyCode(userId, pm.getPhone(), code);
+        if(!valid) throw new InvalidCredentials("Incorrect code");
+
+        pm.setVerified(true);
+        repository.save(pm);
+
     }
 }

@@ -145,6 +145,16 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
             <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <version>12.4.0</version>
+                <configuration>
+                    <url>${env.DB_URL}</url>
+                    <user>${env.DB_USERNAME}</user>
+                    <password>${env.DB_PASSWORD}</password>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <executions>

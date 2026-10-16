@@ -52,6 +52,24 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/PaymentMethod' }
         '400': { $ref: '#/components/responses/BadRequest' }
+  /api/buyer/payment-methods/{id}/confirm:
+    parameters:
+      - $ref: '#/components/parameters/PaymentMethodId'
+      - $ref: '#/components/parameters/UserIdHeader'
+    post:
+      tags: [Buyer payment methods]
+      operationId: confirmBuyerPhonePaymentMethod
+      summary: Confirm a phone payment method with its verification code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ConfirmPhonePaymentMethodRequest' }
+      responses:
+        '200': { description: Phone payment method verified }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { description: Verification code is invalid }
+        '404': { $ref: '#/components/responses/NotFound' }
   /api/buyer/payment-methods/{id}:
     parameters:
       - $ref: '#/components/parameters/PaymentMethodId'
@@ -442,6 +460,12 @@ components:
         expYear: { type: integer, minimum: 2000, maximum: 2500 }
         phone: { type: string, maxLength: 30 }
         isDefault: { type: boolean, default: false }
+    ConfirmPhonePaymentMethodRequest:
+      type: object
+      required: [code]
+      additionalProperties: false
+      properties:
+        code: { type: string, pattern: '^\d{6}$' }
     UpdatePaymentMethodRequest:
       type: object
       minProperties: 1

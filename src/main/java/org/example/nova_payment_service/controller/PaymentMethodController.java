@@ -3,8 +3,9 @@ package org.example.nova_payment_service.controller;
 import com.stripe.exception.StripeException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.nova_payment_service.dto.CreatePaymentMethod;
+import org.example.nova_payment_service.validator.CreatePaymentMethod;
 import org.example.nova_payment_service.dto.PaymentMethodResponse;
+import org.example.nova_payment_service.validator.VerifyPhoneRequest;
 import org.example.nova_payment_service.service.PaymentMethodService;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,7 +16,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @RequestMapping("/buyer/payment-methods")
 public class PaymentMethodController {
-    private PaymentMethodService service;
+    private final PaymentMethodService service;
 
     @GetMapping
     public List<PaymentMethodResponse> getAll (
@@ -30,5 +31,14 @@ public class PaymentMethodController {
             @Valid @RequestBody CreatePaymentMethod request
     ) throws StripeException {
         return service.create(userId,request);
+    }
+
+    @PostMapping("/{paymentMethodId}/confirm")
+    public void confirmVerification(
+            @RequestHeader("x-user-id") UUID userId,
+            @PathVariable UUID paymentMethodId,
+            @Valid @RequestBody VerifyPhoneRequest request
+    ) {
+        service.confirmVerification(userId, paymentMethodId, request.code());
     }
 }
