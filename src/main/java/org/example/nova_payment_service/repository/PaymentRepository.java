@@ -10,6 +10,4 @@ public interface PaymentRepository extends JpaRepository<PaymentMethod, UUID> {
 
     List<PaymentMethod> findAllByUserId(UUID userId);
 
-
-
 }

@@ -3,14 +3,14 @@ package org.example.nova_payment_service.service;
 import org.example.nova_payment_service.dto.MvolaCallbackRequest;
 import org.example.nova_payment_service.dto.OrangeMoneyNotificationRequest;
 import org.example.nova_payment_service.dto.ProviderWebhookResponse;
+import org.example.nova_payment_service.repository.ProviderWebhookRepository;
 import org.junit.jupiter.api.Test;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -21,9 +21,9 @@ class ProviderWebhookServiceTest {
 
     @Test
     void acceptsMvolaCallbackAndUpdatesPendingTransaction() {
-        JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
-        when(jdbcTemplate.update(anyString(), any(), any(), any())).thenReturn(1);
-        ProviderWebhookService service = new ProviderWebhookService(jdbcTemplate, SECRET, SECRET);
+        ProviderWebhookRepository repository = mock(ProviderWebhookRepository.class);
+        when(repository.completeMvolaPayment("completed", "provider-transaction-id", "correlation-id")).thenReturn(1);
+        ProviderWebhookService service = new ProviderWebhookService(repository, SECRET);
 
         ProviderWebhookResponse response = service.receiveMvolaCallback(
                 SECRET,
@@ -32,14 +32,18 @@ class ProviderWebhookServiceTest {
 
         assertEquals("completed", response.status());
         assertEquals(false, response.duplicate());
-        verify(jdbcTemplate).update(anyString(), any(), any(), any());
+        verify(repository).completeMvolaPayment("completed", "provider-transaction-id", "correlation-id");
     }
 
     @Test
     void acceptsOrangeSuccessAndPersistsUsingNotificationToken() {
-        JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
-        when(jdbcTemplate.update(anyString(), any(), any(), any())).thenReturn(1);
-        ProviderWebhookService service = new ProviderWebhookService(jdbcTemplate, SECRET, SECRET);
+        ProviderWebhookRepository repository = mock(ProviderWebhookRepository.class);
+        when(repository.completeOrangeMoneyPayment(
+                eq("completed"),
+                eq("provider-transaction-id"),
+                anyString()
+        )).thenReturn(1);
+        ProviderWebhookService service = new ProviderWebhookService(repository, SECRET);
 
         ProviderWebhookResponse response = service.receiveOrangeNotification(
                 new OrangeMoneyNotificationRequest("SUCCESS", "opaque-notification-token", "provider-transaction-id")
@@ -47,19 +51,23 @@ class ProviderWebhookServiceTest {
 
         assertEquals("completed", response.status());
         assertEquals(false, response.duplicate());
-        verify(jdbcTemplate).update(anyString(), any(), any(), any());
+        verify(repository).completeOrangeMoneyPayment(
+                eq("completed"),
+                eq("provider-transaction-id"),
+                anyString()
+        );
     }
 
     @Test
     void rejectsMvolaCallbackWhenSecretIsWrongWithoutQueryingDatabase() {
-        JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
-        ProviderWebhookService service = new ProviderWebhookService(jdbcTemplate, SECRET, SECRET);
+        ProviderWebhookRepository repository = mock(ProviderWebhookRepository.class);
+        ProviderWebhookService service = new ProviderWebhookService(repository, SECRET);
 
         assertThrows(ResponseStatusException.class, () -> service.receiveMvolaCallback(
                 "wrong-secret",
                 new MvolaCallbackRequest("completed", "correlation-id", null)
         ));
 
-        verifyNoInteractions(jdbcTemplate);
+        verifyNoInteractions(repository);
     }
 }

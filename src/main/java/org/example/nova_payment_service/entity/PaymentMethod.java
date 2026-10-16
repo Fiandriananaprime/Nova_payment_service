@@ -29,13 +29,12 @@ public class PaymentMethod {
     @Column(length = 100)
     private String provider;
 
-    @Column(name = "provider_payment_method_id", length = 255)
+    @Column(name = "provider_payment_method_id")
     private String providerPaymentMethodId;
 
     @Column(length = 100)
     private String label;
 
-    // Card display information
     @Column(length = 50)
     private String brand;
 
@@ -51,9 +50,11 @@ public class PaymentMethod {
     @Column(length = 30)
     private String phone;
 
+    @Builder.Default
     @Column(name = "is_default", nullable = false)
     private boolean isDefault = false;
 
+    @Builder.Default
     @Column(nullable = false)
     private boolean verified = false;
 

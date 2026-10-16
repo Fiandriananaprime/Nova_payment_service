@@ -1,37 +1,28 @@
 package org.example.nova_payment_service.dto;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import org.example.nova_payment_service.entity.PaymentMethodType;
 
-public record CreatePaymentMethod (
-    @NotNull
-    PaymentMethodType type,
+public record CreatePaymentMethod(
+    @NotNull(message = "Le type de paiement est obligatoire")
+        PaymentMethodType type,
 
-    @Size(max = 100)
-    String provider,
-
-    @Size(max = 255)
-    String providerPaymentMethodId,
-
-    @Size(max = 100)
+    @Size(max = 100, message = "Le label ne doit pas dépasser 100 caractères")
     String label,
 
-    @Size(max = 50)
-    String brand,
+    @Size(max = 100, message = "Le provider ne doit pas dépasser 100 caractères")
+    String provider,
 
-    @Pattern(regexp = "\\d{4}")
-    String last4,
+    @Size(max = 255, message = "L'identifiant du moyen de paiement ne doit pas dépasser 255 caractères")
+    String providerPaymentMethodId,
 
-    @Min(1)
-    @Max(12)
-    Short expMonth,
-
-    @Min(2000)
-    @Max(2500)
-    Short expYear,
-
-    @Size(max = 30)
+    @Pattern(
+            regexp = "^\\+?[0-9]{8,15}$",
+            message = "Le numéro de téléphone doit contenir entre 8 et 15 chiffres, avec un + facultatif"
+    )
     String phone,
 
     Boolean isDefault
-){}
+    ) {}
