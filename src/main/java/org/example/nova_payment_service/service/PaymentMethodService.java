@@ -4,7 +4,6 @@ package org.example.nova_payment_service.service;
 import com.stripe.exception.StripeException;
 import lombok.RequiredArgsConstructor;
 import org.example.nova_payment_service.dto.CardDetails;
-import org.example.nova_payment_service.exception.AccessDenied;
 import org.example.nova_payment_service.validator.CreatePaymentMethod;
 import org.example.nova_payment_service.validator.UpdatePaymentMethod;
 import org.example.nova_payment_service.dto.PaymentMethodResponse;
