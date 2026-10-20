@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/seller/payout-methods")
+@RequestMapping("/api/seller/payout-methods")
 @RequiredArgsConstructor
 public class PayoutMethodController {
     private final PayoutMethodService service;

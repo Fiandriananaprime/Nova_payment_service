@@ -22,10 +22,6 @@
       username: ${RABBITMQ_USERNAME}
       password: ${RABBITMQ_PASSWORD}
 
-  server:
-    servlet:
-      context-path: /api
-
   management:
     endpoints:
       web:

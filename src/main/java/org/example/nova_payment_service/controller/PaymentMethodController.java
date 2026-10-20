@@ -15,7 +15,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/buyer/payment-methods")
+@RequestMapping("/api/buyer/payment-methods")
 public class PaymentMethodController {
     private final PaymentMethodService service;
 
