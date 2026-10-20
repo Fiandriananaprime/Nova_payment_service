@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.nova_payment_service.validator.CreatePayoutMethod;
 import org.example.nova_payment_service.dto.PayoutMethodDto;
 import org.example.nova_payment_service.service.PayoutMethodService;
+import org.example.nova_payment_service.validator.PayoutUpdate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,4 +32,12 @@ public class PayoutMethodController {
         return service.createPayoutMethod(sellerId,body);
     }
 
+    @PatchMapping("/{payoutMethodId}")
+    public PayoutMethodDto  update(
+            @PathVariable("payoutMethodId") UUID pmId,
+            @Valid @RequestBody PayoutUpdate request,
+            @RequestHeader("x-user-id") UUID userId
+            ){
+        return service.updatePayoutMethod(userId,pmId,request);
+    }
 }
