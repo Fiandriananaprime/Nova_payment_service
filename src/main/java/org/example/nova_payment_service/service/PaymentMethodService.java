@@ -143,6 +143,6 @@ public class PaymentMethodService {
 
     public void deletePaymentMethod(UUID userId, UUID paymentMethodId){
         long result = repository.deleteByUserIdAndId(userId,paymentMethodId);
-        if(result == 0) throw new AccessDenied("This payment method doesnt appear to belong to the user");
+        if(result == 0) throw new PaymentMethodNotFound("Payment method not found");
     }
 }
