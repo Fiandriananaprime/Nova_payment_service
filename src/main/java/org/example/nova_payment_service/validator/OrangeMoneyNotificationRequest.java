@@ -1,4 +1,4 @@
-package org.example.nova_payment_service.dto;
+package org.example.nova_payment_service.validator;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

@@ -1,7 +1,7 @@
 package org.example.nova_payment_service.service;
 
-import org.example.nova_payment_service.dto.MvolaCallbackRequest;
-import org.example.nova_payment_service.dto.OrangeMoneyNotificationRequest;
+import org.example.nova_payment_service.validator.MvolaCallbackRequest;
+import org.example.nova_payment_service.validator.OrangeMoneyNotificationRequest;
 import org.example.nova_payment_service.dto.ProviderWebhookResponse;
 import org.example.nova_payment_service.repository.ProviderWebhookRepository;
 import org.springframework.beans.factory.annotation.Value;

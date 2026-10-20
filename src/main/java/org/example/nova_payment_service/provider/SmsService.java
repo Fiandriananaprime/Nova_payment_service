@@ -26,7 +26,7 @@ public class SmsService {
         restClient.post()
                 .uri(webhookUrl)
                 .contentType(MediaType.APPLICATION_JSON)
-                .header("x-api-key",apiKey)
+                .header("X-API-Key",apiKey)
                 .body(new SmsRequest(target, message))
                 .retrieve()
                 .toBodilessEntity();
