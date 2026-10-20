@@ -8,7 +8,7 @@ import org.example.nova_payment_service.validator.CreatePaymentMethod;
 import org.example.nova_payment_service.validator.UpdatePaymentMethod;
 import org.example.nova_payment_service.dto.PaymentMethodResponse;
 import org.example.nova_payment_service.entity.PaymentMethod;
-import org.example.nova_payment_service.entity.PaymentMethodType;
+import org.example.nova_payment_service.dto.PaymentMethodType;
 import org.example.nova_payment_service.exception.InvalidCredentials;
 import org.example.nova_payment_service.exception.PaymentMethodNotFound;
 import org.example.nova_payment_service.mapper.PaymentMethodMapper;

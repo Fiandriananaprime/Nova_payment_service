@@ -1,8 +1,6 @@
 package org.example.nova_payment_service.dto;
 
 
-import org.example.nova_payment_service.entity.PayoutMethodType;
-
 import java.util.UUID;
 
 public record PayoutMethodDto(

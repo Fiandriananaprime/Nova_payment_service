@@ -2,6 +2,7 @@ package org.example.nova_payment_service.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.nova_payment_service.dto.PayoutMethodType;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 

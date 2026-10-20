@@ -3,7 +3,7 @@ package org.example.nova_payment_service.service;
 import org.example.nova_payment_service.dto.PayoutMethodDto;
 import org.example.nova_payment_service.dto.ProviderAccount;
 import org.example.nova_payment_service.entity.PayoutMethod;
-import org.example.nova_payment_service.entity.PayoutMethodType;
+import org.example.nova_payment_service.dto.PayoutMethodType;
 import org.example.nova_payment_service.exception.PaymentMethodNotFound;
 import org.example.nova_payment_service.exception.PaymentMethodNotHandled;
 import org.example.nova_payment_service.provider.MobileProviderClient;

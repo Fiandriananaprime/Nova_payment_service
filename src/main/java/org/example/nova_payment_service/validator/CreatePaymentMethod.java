@@ -3,7 +3,7 @@ package org.example.nova_payment_service.validator;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import org.example.nova_payment_service.entity.PaymentMethodType;
+import org.example.nova_payment_service.dto.PaymentMethodType;
 
 public record CreatePaymentMethod(
     @NotNull(message = "Le type de paiement est obligatoire")

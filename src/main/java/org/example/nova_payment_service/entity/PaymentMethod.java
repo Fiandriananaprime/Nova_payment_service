@@ -2,6 +2,7 @@ package org.example.nova_payment_service.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.nova_payment_service.dto.PaymentMethodType;
 
 import java.time.Instant;
 import java.util.UUID;

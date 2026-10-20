@@ -63,3 +63,4 @@
   # OTP secret
   security:
     otp-secret: ${OTP_SECRET}
+    payout-encryption-key: ${PAYOUT_ENCRYPTION_KEY}

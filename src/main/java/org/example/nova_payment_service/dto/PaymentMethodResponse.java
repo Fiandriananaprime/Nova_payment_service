@@ -5,7 +5,6 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import org.example.nova_payment_service.entity.PaymentMethodType;
 
 import java.time.Instant;
 import java.util.UUID;
