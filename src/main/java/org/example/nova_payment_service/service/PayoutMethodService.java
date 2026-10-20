@@ -57,18 +57,19 @@ public class PayoutMethodService {
             case "034", "038" -> "MVOLA";
             case "032" -> "ORANGE_MONEY";
             case "037" -> "AIRTEL_MONEY";
-            default -> throw new PaymentMethodNotHandled("¨Phone provider not handled");
+            default -> throw new PaymentMethodNotHandled("Phone provider not handled");
         };
 
         ProviderAccount account = providerClient.findAccount(provider, phoneNumber);
         PayoutMethod payoutMethod = repository.save(
                 PayoutMethod.builder()
+                        .id(UUID.randomUUID())
                         .sellerId(sellerId)
                         .type(request.type())
                         .accountName(account.accountName())
                         .label(request.label())
-                        .accountEncrypted(encryptionService.encrypt(request.account()))
-                        .maskedAccount(maskAccount(request.account()))
+                        .accountEncrypted(encryptionService.encrypt(phoneNumber))
+                        .maskedAccount(maskAccount(phoneNumber))
                         .isDefault(Boolean.TRUE.equals(request.isDefault()))
                         .verified(false)
                         .build()
@@ -101,7 +102,7 @@ public class PayoutMethodService {
                 pm.getType(),
                 pm.getLabel(),
                 pm.getAccountName(),
-                pm.getAccountEncrypted(),
+                pm.getMaskedAccount(),
                 pm.isDefault(),
                 pm.isVerified()
         );
