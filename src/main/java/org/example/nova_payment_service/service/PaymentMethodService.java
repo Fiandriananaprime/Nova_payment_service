@@ -4,7 +4,9 @@ package org.example.nova_payment_service.service;
 import com.stripe.exception.StripeException;
 import lombok.RequiredArgsConstructor;
 import org.example.nova_payment_service.dto.CardDetails;
+import org.example.nova_payment_service.exception.AccessDenied;
 import org.example.nova_payment_service.validator.CreatePaymentMethod;
+import org.example.nova_payment_service.validator.UpdatePaymentMethod;
 import org.example.nova_payment_service.dto.PaymentMethodResponse;
 import org.example.nova_payment_service.entity.PaymentMethod;
 import org.example.nova_payment_service.entity.PaymentMethodType;
@@ -98,6 +100,29 @@ public class PaymentMethodService {
         return createMobile(userId, method);
     }
 
+        @Transactional
+        public PaymentMethodResponse update(
+                        UUID userId,
+                        UUID paymentMethodId,
+                        UpdatePaymentMethod request
+        ) {
+                PaymentMethod paymentMethod = repository.findByIdAndUserId(paymentMethodId, userId)
+                                .orElseThrow(() -> new PaymentMethodNotFound("Payment method not found"));
+
+                if (Boolean.TRUE.equals(request.isDefault())) {
+                        repository.findAllByUserId(userId).stream()
+                                        .filter(method -> !method.getId().equals(paymentMethodId))
+                                        .filter(PaymentMethod::isDefault)
+                                        .forEach(method -> method.setDefault(false));
+                }
+
+                if (request.label() != null) paymentMethod.setLabel(request.label());
+                if (request.phone() != null) paymentMethod.setPhone(request.phone());
+                if (request.isDefault() != null) paymentMethod.setDefault(request.isDefault());
+
+                return mapper.toPaymentMethodResponse(repository.save(paymentMethod));
+        }
+
     public void confirmVerification(
             UUID userId,UUID paymentMethodId, String code
     ){
@@ -114,5 +139,10 @@ public class PaymentMethodService {
         pm.setVerified(true);
         repository.save(pm);
 
+    }
+
+    public void deletePaymentMethod(UUID userId, UUID paymentMethodId){
+        long result = repository.deleteByUserIdAndId(userId,paymentMethodId);
+        if(result == 0) throw new AccessDenied("This payment method doesnt appear to belong to the user");
     }
 }

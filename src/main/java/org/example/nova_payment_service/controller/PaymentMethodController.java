@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.nova_payment_service.validator.CreatePaymentMethod;
 import org.example.nova_payment_service.dto.PaymentMethodResponse;
 import org.example.nova_payment_service.validator.VerifyPhoneRequest;
+import org.example.nova_payment_service.validator.UpdatePaymentMethod;
 import org.example.nova_payment_service.service.PaymentMethodService;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,6 +34,15 @@ public class PaymentMethodController {
         return service.create(userId,request);
     }
 
+    @PatchMapping("/{paymentMethodId}")
+    public PaymentMethodResponse updatePaymentMethod(
+            @RequestHeader("x-user-id") UUID userId,
+            @PathVariable UUID paymentMethodId,
+            @Valid @RequestBody UpdatePaymentMethod request
+    ) {
+        return service.update(userId, paymentMethodId, request);
+    }
+
     @PostMapping("/{paymentMethodId}/confirm")
     public void confirmVerification(
             @RequestHeader("x-user-id") UUID userId,
@@ -40,5 +50,13 @@ public class PaymentMethodController {
             @Valid @RequestBody VerifyPhoneRequest request
     ) {
         service.confirmVerification(userId, paymentMethodId, request.code());
+    }
+
+    @DeleteMapping("/{paymentMethodId}")
+    public void DeletePaymentMethod(
+            @RequestHeader("x-user-id") UUID userId,
+            @PathVariable UUID paymentMethodId
+    ){
+        service.deletePaymentMethod(userId,paymentMethodId);
     }
 }

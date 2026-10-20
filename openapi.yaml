@@ -97,18 +97,6 @@ paths:
       responses:
         '204': { description: Payment method removed }
         '404': { $ref: '#/components/responses/NotFound' }
-  /api/buyer/payment-methods/{id}/default:
-    parameters:
-      - $ref: '#/components/parameters/PaymentMethodId'
-      - $ref: '#/components/parameters/UserIdHeader'
-    patch:
-      tags: [Buyer payment methods]
-      operationId: setDefaultBuyerPaymentMethod
-      summary: Set the default payment method
-      responses:
-        '204': { description: Default payment method updated }
-        '404': { $ref: '#/components/responses/NotFound' }
-
   /api/seller/balance:
     get:
       tags: [Seller payouts]
