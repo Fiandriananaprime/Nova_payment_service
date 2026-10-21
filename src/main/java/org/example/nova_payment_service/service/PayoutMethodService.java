@@ -13,6 +13,7 @@ import org.example.nova_payment_service.validator.PayoutUpdate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 
@@ -30,6 +31,12 @@ public class PayoutMethodService {
 
         return "*".repeat(account.length() - 4)
                 + account.substring(account.length() - 4);
+    }
+
+    public void deletePayoutMethod(UUID pmId, UUID sellerId){
+        Optional<PayoutMethod> pm = repository.findByIdAndSellerId(pmId,sellerId);
+        if(pm.isEmpty()) throw new PaymentMethodNotFound("Payment method not found");
+        repository.deleteById(pmId);
     }
 
     public List<PayoutMethodDto> findPayoutMethodBySellerId(UUID sellerId) {

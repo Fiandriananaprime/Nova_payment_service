@@ -12,12 +12,9 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
-/**
- * Reusable Orange Money WebPay client for the contract implemented by
- * MockMobileProvider. Orange WebPay returns a hosted payment URL; creating the
- * request alone does not mean that the customer has paid.
- */
+
 @Component
 public class OrangeMoneyProviderClient {
 
@@ -32,10 +29,9 @@ public class OrangeMoneyProviderClient {
     public OrangeMoneyProviderClient(RestClient.Builder builder, Environment environment) {
         String baseUrl = environment.getProperty("ORANGE_MONEY_BASE_URL", "http://localhost:4010");
         this.restClient = builder.clone().baseUrl(baseUrl).build();
-        this.basicAuthorization = environment.getProperty(
-                "ORANGE_BASIC_AUTH",
-                "Basic bG9jYWxLaWQ6bG9jYWxTZWNyZXQ="
-        ).trim();
+        this.basicAuthorization = Objects.requireNonNull(environment.getProperty(
+                "ORANGE_BASIC_AUTH"
+        )).trim();
         this.merchantKey = environment.getProperty("ORANGE_MERCHANT_KEY", "local-merchant-key").trim();
         this.countrySegment = environment.getProperty("ORANGE_MONEY_COUNTRY", "dev").trim().toLowerCase();
         this.currency = environment.getProperty("ORANGE_MONEY_CURRENCY", "OUV").trim();

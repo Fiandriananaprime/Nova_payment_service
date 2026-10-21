@@ -2,6 +2,7 @@ package org.example.nova_payment_service.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.example.nova_payment_service.entity.SellerBalance;
+import org.example.nova_payment_service.exception.InvalidCredentials;
 import org.example.nova_payment_service.service.SellerBalanceService;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,6 +19,7 @@ public class InternalPathController {
             @RequestHeader("x-user-id") UUID adminId,
             @PathVariable("sellerId") UUID sellerId
     ) {
+        if(adminId == null) throw new InvalidCredentials("Admin not authentified");
         return sellerBalanceService.createSellerBalance(sellerId);
     }
 }

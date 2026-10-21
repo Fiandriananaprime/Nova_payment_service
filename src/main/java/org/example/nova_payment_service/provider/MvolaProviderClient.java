@@ -29,11 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * MVola Merchant Pay adapter backed by the generated WSO2 SDK.
- * Merchant Pay is customer-to-merchant collection, not seller disbursement.
- * MVOLA_BASE_URL is the provider origin, e.g. http://localhost:4010.
- */
 @Component
 public class MvolaProviderClient {
     private static final String API_PATH = "/mvola/mm/transactions/type/merchantpay/1.0.0";

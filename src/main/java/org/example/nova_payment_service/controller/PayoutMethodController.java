@@ -40,4 +40,12 @@ public class PayoutMethodController {
             ){
         return service.updatePayoutMethod(userId,pmId,request);
     }
+
+    @DeleteMapping("/{payoutMethodId}")
+    public void delete(
+            @PathVariable("payoutMethodId") UUID pmId,
+            @RequestHeader("x-user-id")UUID userId
+    ){
+        service.deletePayoutMethod(pmId, userId);
+    }
 }

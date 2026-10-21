@@ -11,14 +11,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.util.Locale;
-import java.util.Objects;
 
-/**
- * Reusable Stripe client.
- *
- * This client deliberately accepts only Stripe test-mode secret keys. Amounts passed
- * to PaymentIntent methods must already be in the smallest unit expected by Stripe.
- */
 @Component
 public class StripeProvider {
 
@@ -49,12 +42,6 @@ public class StripeProvider {
         );
     }
 
-    /**
-     * Creates and confirms a card PaymentIntent.
-     *
-     * The idempotency key is forwarded to Stripe so retries of the same operation
-     * can reuse the same provider result. A new logical payment needs a new key.
-     */
     public PaymentIntent createPaymentIntent(
             long amountMinorUnits,
             String currency,
