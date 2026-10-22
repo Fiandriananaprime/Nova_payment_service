@@ -116,7 +116,7 @@ public class PayoutService {
         };
 
         String recipientMsisdn = encryptionService.decrypt(payoutMethod.getAccountEncrypted());
-        String reference = "nova-payout-" + UUID.randomUUID();
+        String reference = "nova-payout-" + ik;
 
         SellerBalance reservedBalance = sbService.initiatePayout(requestPayout.amount(), sellerId);
         Payout payout = Payout.builder()
