@@ -115,6 +115,7 @@ public class PayoutService {
             );
         };
 
+        provider.validateConfiguration();
         String recipientMsisdn = encryptionService.decrypt(payoutMethod.getAccountEncrypted());
         String reference = "nova-payout-" + ik;
 
