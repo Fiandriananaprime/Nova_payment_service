@@ -19,6 +19,14 @@ public class MvolaPayoutProvider implements PayoutProvider {
     }
 
     @Override
+    public void validateConfiguration() {
+        client.validateConfiguration();
+        if (senderMsisdn == null || senderMsisdn.isBlank()) {
+            throw new IllegalStateException("MVOLA_MERCHANT_MSISDN must identify an existing mock MVola wallet");
+        }
+    }
+
+    @Override
     public PayoutResult execute(BigDecimal amount, String recipientMsisdn, String reference, String idempotencyKey) {
         return client.execute("MVOLA", senderMsisdn, recipientMsisdn, amount, reference, idempotencyKey);
     }
