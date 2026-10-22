@@ -117,7 +117,8 @@ public class PayoutService {
 
         provider.validateConfiguration();
         String recipientMsisdn = encryptionService.decrypt(payoutMethod.getAccountEncrypted());
-        String reference = "nova-payout-" + ik;
+        String providerIdempotencyKey = sellerId + ":" + ik;
+        String reference = "nova-payout-" + sellerId + "-" + ik;
 
         SellerBalance reservedBalance = sbService.initiatePayout(requestPayout.amount(), sellerId);
         Payout payout = Payout.builder()
@@ -136,7 +137,7 @@ public class PayoutService {
                     requestPayout.amount(),
                     recipientMsisdn,
                     reference,
-                    ik.toString()
+                    providerIdempotencyKey
             );
 
             if (result.completed()) {
