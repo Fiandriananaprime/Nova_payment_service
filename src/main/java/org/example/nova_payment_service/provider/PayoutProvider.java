@@ -3,6 +3,8 @@ package org.example.nova_payment_service.provider;
 import java.math.BigDecimal;
 
 public interface PayoutProvider {
+    void validateConfiguration();
+
     PayoutResult execute(
             BigDecimal amount,
             String recipientMsisdn,
