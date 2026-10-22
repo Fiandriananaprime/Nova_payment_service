@@ -42,4 +42,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handlerConflict(ConflictException e){
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
+
+    @ExceptionHandler
+    public ResponseEntity<String> handlerBalanceException(BalanceNotFound e){
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
 }
