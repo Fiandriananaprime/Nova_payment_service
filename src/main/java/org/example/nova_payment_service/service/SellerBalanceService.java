@@ -66,4 +66,39 @@ public class SellerBalanceService {
 
         return repository.save(sb);
     }
+
+    @Transactional
+    public SellerBalance releasePayout(UUID sellerId, UUID payoutId, BigDecimal amount) {
+        SellerBalance sb = repository.findBySellerId(sellerId)
+                .orElseThrow(() -> new BalanceNotFound("User " + sellerId + " not found"));
+
+        if (sb.getReservedAmount().compareTo(amount) < 0) {
+            throw new BalanceException("Reserved balance not enough to release payout");
+        }
+
+        sb.setReservedAmount(sb.getReservedAmount().subtract(amount));
+        sb.setAvailableAmount(sb.getAvailableAmount().add(amount));
+
+        SellerBalance saved = repository.save(sb);
+        historyRepository.save(SellerBalanceHistory.builder()
+                .sellerId(sellerId)
+                .balance(saved.getAvailableAmount())
+                .currency(saved.getCurrency())
+                .payoutId(payoutId)
+                .recordedAt(Instant.now())
+                .build());
+        return saved;
+    }
+
+    @Transactional
+    public void recordPayoutBalance(UUID sellerId, UUID payoutId, BigDecimal balance) {
+        historyRepository.save(SellerBalanceHistory.builder()
+                .sellerId(sellerId)
+                .balance(balance)
+                .currency("MGA")
+                .payoutId(payoutId)
+                .recordedAt(Instant.now())
+                .build());
+    }
+
 }
