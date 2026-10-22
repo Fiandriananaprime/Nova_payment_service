@@ -1,10 +1,7 @@
 package org.example.nova_payment_service.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -16,6 +13,7 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class SellerBalanceHistory {
 
     @Id
@@ -34,7 +32,7 @@ public class SellerBalanceHistory {
     @Column(name = "currency", nullable = false, length = 3)
     private String currency = "MGA";
 
-    @Column(name = "recorded_at", nullable = false, columnDefinition = "TIMESTAMPTZ(6)")
+    @Column(name = "recorded_at", nullable = false, columnDefinition = "TIMESTAMP(6)")
     private Instant recordedAt;
 
 }

@@ -47,4 +47,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handlerBalanceException(BalanceNotFound e){
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
+
+    @ExceptionHandler
+    public ResponseEntity<String> handlerBalanceException(BalanceException e){
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).body(e.getMessage());
+    }
 }

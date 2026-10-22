@@ -1,8 +1,10 @@
 package org.example.nova_payment_service.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.nova_payment_service.dto.PayoutDto;
 import org.example.nova_payment_service.service.PayoutService;
+import org.example.nova_payment_service.validator.RequestPayout;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
@@ -23,5 +25,14 @@ public class PayoutController {
             @RequestParam(name= "limit", defaultValue = "20") int limit
     ){
         return payoutService.listPayoutsBySellerId(sellerId, PageRequest.of(page,limit));
+    }
+
+    @PostMapping
+    public PayoutDto requestPayout(
+            @RequestHeader("x-user-id") UUID sellerId,
+            @RequestHeader("Idempotency-key") UUID idempotencyKey,
+            @Valid @RequestBody RequestPayout requestPayout
+            ){
+        return payoutService.requestPayout(sellerId, idempotencyKey,requestPayout);
     }
 }
