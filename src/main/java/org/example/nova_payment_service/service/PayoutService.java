@@ -16,10 +16,10 @@ import org.example.nova_payment_service.exception.PaymentMethodNotHandled;
 import org.example.nova_payment_service.provider.MvolaPayoutProvider;
 import org.example.nova_payment_service.provider.OrangeMoneyPayoutProvider;
 import org.example.nova_payment_service.provider.PayoutProvider;
+import org.example.nova_payment_service.repository.IdempotencyKeyRepository;
 import org.example.nova_payment_service.repository.PayoutMethodRepository;
 import org.example.nova_payment_service.repository.PayoutRepository;
 import org.example.nova_payment_service.repository.SellerBalanceHistoryRepository;
-import org.example.nova_payment_service.service.AccountEncryptionService;
 import org.example.nova_payment_service.validator.RequestPayout;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,6 +39,7 @@ public class PayoutService {
 
     private final PayoutRepository payoutRepository;
     private final SellerBalanceHistoryRepository historyRepository;
+    private final IdempotencyKeyRepository idempotencyRepository;
     private final IdempotencyKeyService ikService;
     private final PayoutMethodRepository payoutMethodRepository;
     private final SellerBalanceService sbService;
@@ -137,29 +138,18 @@ public class PayoutService {
                     requestPayout.amount(),
                     recipientMsisdn,
                     reference,
-                    providerIdempotencyKey
+                    providerIdempotencyKey,
+                    payout.getId()
             );
 
             if (result.completed()) {
-                SellerBalance settledBalance = sbService.confirmPayout(
-                        sellerId, payout.getId(), requestPayout.amount()
-                );
-                payout.setStatus(PayoutStatus.completed);
-                payout.setPaidAt(Instant.now());
-                payout.setFailureReason(null);
-                idempotency.setStatus(IdempotencyKeyStatus.COMPLETED);
-                idempotency.setResponseStatus(200);
-                idempotency.setResponseBody(Map.of(
-                        "payoutId", payout.getId().toString(),
-                        "status", payout.getStatus().name()
-                ));
+                settlePayoutCompleted(payout, idempotency);
+                SellerBalance settledBalance = sbService.confirmPayout(sellerId, payout.getId(), requestPayout.amount());
                 return toDTO(payoutRepository.save(payout), settledBalance.getAvailableAmount());
             }
 
             if (result.failed()) {
-                SellerBalance releasedBalance = sbService.releasePayout(
-                        sellerId, payout.getId(), requestPayout.amount()
-                );
+                SellerBalance releasedBalance = sbService.releasePayout(sellerId, payout.getId(), requestPayout.amount());
                 payout.setStatus(PayoutStatus.failed);
                 payout.setFailureReason(nonBlank(result.failureReason(), "Provider rejected the payout"));
                 idempotency.setStatus(IdempotencyKeyStatus.FAILED);
@@ -172,17 +162,71 @@ public class PayoutService {
                 return toDTO(payoutRepository.save(payout), releasedBalance.getAvailableAmount());
             }
 
-            payout.setFailureReason("Provider returned an unknown payout status; reconciliation is required");
+            payout.setFailureReason("Provider returned an unknown payout status; awaiting callback reconciliation");
             sbService.recordPayoutBalance(sellerId, payout.getId(), reservedBalance.getAvailableAmount());
             return toDTO(payoutRepository.save(payout), reservedBalance.getAvailableAmount());
         } catch (RuntimeException exception) {
-            // A transport error may occur after the provider has settled the payout.
-            // Keep the balance reserved and the idempotency key processing until reconciled.
+            // The provider may have committed the payout even when the HTTP response was lost.
+            // Keep funds reserved; the authenticated callback can settle this payout later.
             payout.setStatus(PayoutStatus.processing);
-            payout.setFailureReason("Provider outcome unknown; reconciliation required before retry");
+            payout.setFailureReason("Provider outcome unknown; awaiting payout callback");
             sbService.recordPayoutBalance(sellerId, payout.getId(), reservedBalance.getAvailableAmount());
             return toDTO(payoutRepository.save(payout), reservedBalance.getAvailableAmount());
         }
+    }
+
+    @Transactional
+    public void handleMockPayoutCallback(UUID payoutId, String provider, String status, BigDecimal amount, String failureReason) {
+        Payout payout = payoutRepository.findByIdForUpdate(payoutId)
+                .orElseThrow(() -> new IllegalArgumentException("Unknown payoutId"));
+        if (payout.getAmount().compareTo(amount) != 0) {
+            throw new IllegalArgumentException("Callback amount does not match payout");
+        }
+        String expectedProvider = switch (payout.getMethod()) {
+            case mvola -> "MVOLA";
+            case orange_money -> "ORANGE_MONEY";
+            case bank_account -> throw new PaymentMethodNotHandled("Bank account payout callback is unsupported");
+        };
+        if (!expectedProvider.equals(provider)) {
+            throw new IllegalArgumentException("Callback provider does not match payout method");
+        }
+
+        // Provider callbacks are at-least-once. A final payout must never change or settle twice.
+        if (payout.getStatus() == PayoutStatus.completed || payout.getStatus() == PayoutStatus.failed) return;
+        IdempotencyKey idempotency = idempotencyRepository.findByPayoutId(payoutId)
+                .orElseThrow(() -> new IllegalStateException("Idempotency record not found for payout"));
+
+        if ("COMPLETED".equalsIgnoreCase(status)) {
+            SellerBalance settledBalance = sbService.confirmPayout(payout.getSellerId(), payout.getId(), payout.getAmount());
+            settlePayoutCompleted(payout, idempotency);
+            payoutRepository.save(payout);
+        } else if ("FAILED".equalsIgnoreCase(status)) {
+            SellerBalance releasedBalance = sbService.releasePayout(payout.getSellerId(), payout.getId(), payout.getAmount());
+            payout.setStatus(PayoutStatus.failed);
+            payout.setFailureReason(nonBlank(failureReason, "Provider rejected the payout"));
+            idempotency.setStatus(IdempotencyKeyStatus.FAILED);
+            idempotency.setResponseStatus(422);
+            idempotency.setResponseBody(Map.of(
+                    "payoutId", payout.getId().toString(),
+                    "status", payout.getStatus().name(),
+                    "failureReason", payout.getFailureReason()
+            ));
+            payoutRepository.save(payout);
+        } else {
+            throw new IllegalArgumentException("Unsupported payout callback status");
+        }
+    }
+
+    private static void settlePayoutCompleted(Payout payout, IdempotencyKey idempotency) {
+        payout.setStatus(PayoutStatus.completed);
+        payout.setPaidAt(Instant.now());
+        payout.setFailureReason(null);
+        idempotency.setStatus(IdempotencyKeyStatus.COMPLETED);
+        idempotency.setResponseStatus(200);
+        idempotency.setResponseBody(Map.of(
+                "payoutId", payout.getId().toString(),
+                "status", payout.getStatus().name()
+        ));
     }
 
     private static String nonBlank(String value, String fallback) {
