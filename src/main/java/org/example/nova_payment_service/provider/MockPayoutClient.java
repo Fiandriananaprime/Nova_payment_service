@@ -22,6 +22,12 @@ public class MockPayoutClient {
         this.apiKey = apiKey;
     }
 
+    public void validateConfiguration() {
+        if (apiKey == null || apiKey.isBlank()) {
+            throw new IllegalStateException("MOBILE_PROVIDER_API_KEY must be configured");
+        }
+    }
+
     public PayoutProvider.PayoutResult execute(
             String provider,
             String senderMsisdn,
@@ -30,6 +36,7 @@ public class MockPayoutClient {
             String reference,
             String idempotencyKey
     ) {
+        validateConfiguration();
         if (senderMsisdn == null || senderMsisdn.isBlank()) {
             throw new IllegalStateException(provider + " mock payout sender MSISDN is not configured");
         }
