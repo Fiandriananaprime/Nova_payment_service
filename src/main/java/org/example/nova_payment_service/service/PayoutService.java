@@ -177,7 +177,7 @@ public class PayoutService {
 
     @Transactional
     public void handleMockPayoutCallback(UUID payoutId, String provider, String status, BigDecimal amount, String failureReason) {
-        Payout payout = payoutRepository.findById(payoutId)
+        Payout payout = payoutRepository.findByIdForUpdate(payoutId)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown payoutId"));
         if (payout.getAmount().compareTo(amount) != 0) {
             throw new IllegalArgumentException("Callback amount does not match payout");
