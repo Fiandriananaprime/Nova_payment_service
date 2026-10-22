@@ -1,6 +1,7 @@
 package org.example.nova_payment_service.provider;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 public interface PayoutProvider {
     void validateConfiguration();
@@ -9,7 +10,8 @@ public interface PayoutProvider {
             BigDecimal amount,
             String recipientMsisdn,
             String reference,
-            String idempotencyKey
+            String idempotencyKey,
+            UUID payoutId
     );
 
     record PayoutResult(
