@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Component
 public class MvolaPayoutProvider implements PayoutProvider {
@@ -27,7 +28,7 @@ public class MvolaPayoutProvider implements PayoutProvider {
     }
 
     @Override
-    public PayoutResult execute(BigDecimal amount, String recipientMsisdn, String reference, String idempotencyKey) {
-        return client.execute("MVOLA", senderMsisdn, recipientMsisdn, amount, reference, idempotencyKey);
+    public PayoutResult execute(BigDecimal amount, String recipientMsisdn, String reference, String idempotencyKey, UUID payoutId) {
+        return client.execute("MVOLA", senderMsisdn, recipientMsisdn, amount, reference, idempotencyKey, payoutId);
     }
 }
