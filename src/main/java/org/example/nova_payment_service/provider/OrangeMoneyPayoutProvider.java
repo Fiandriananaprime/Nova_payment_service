@@ -19,6 +19,14 @@ public class OrangeMoneyPayoutProvider implements PayoutProvider {
     }
 
     @Override
+    public void validateConfiguration() {
+        client.validateConfiguration();
+        if (senderMsisdn == null || senderMsisdn.isBlank()) {
+            throw new IllegalStateException("ORANGE_MONEY_MERCHANT_MSISDN must identify an existing mock Orange Money wallet");
+        }
+    }
+
+    @Override
     public PayoutResult execute(BigDecimal amount, String recipientMsisdn, String reference, String idempotencyKey) {
         return client.execute("ORANGE_MONEY", senderMsisdn, recipientMsisdn, amount, reference, idempotencyKey);
     }
