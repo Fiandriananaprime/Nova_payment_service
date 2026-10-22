@@ -54,6 +54,7 @@
   # Internal MockMobileProvider API
   mobile-provider:
     base-url: ${MOBILE_PROVIDER_BASE_URL:http://localhost:4010}
+    payout-callback-url: ${MOBILE_PROVIDER_PAYOUT_CALLBACK_URL:http://localhost:8080/internal/webhooks/mock-payout}
     api-key: ${MOBILE_PROVIDER_API_KEY:${SMS_API_KEY:}}
     mvola-sender-msisdn: ${MVOLA_MERCHANT_MSISDN:}
     orange-sender-msisdn: ${ORANGE_MONEY_MERCHANT_MSISDN:}
