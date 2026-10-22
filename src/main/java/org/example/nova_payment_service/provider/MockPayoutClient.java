@@ -12,19 +12,25 @@ import java.util.UUID;
 public class MockPayoutClient {
     private final RestClient restClient;
     private final String apiKey;
+    private final String callbackUrl;
 
     public MockPayoutClient(
             RestClient.Builder builder,
             @Value("${mobile-provider.base-url}") String baseUrl,
-            @Value("${mobile-provider.api-key}") String apiKey
+            @Value("${mobile-provider.api-key}") String apiKey,
+            @Value("${mobile-provider.payout-callback-url}") String callbackUrl
     ) {
         this.restClient = builder.clone().baseUrl(baseUrl).build();
         this.apiKey = apiKey;
+        this.callbackUrl = callbackUrl;
     }
 
     public void validateConfiguration() {
         if (apiKey == null || apiKey.isBlank()) {
             throw new IllegalStateException("MOBILE_PROVIDER_API_KEY must be configured");
+        }
+        if (callbackUrl == null || callbackUrl.isBlank()) {
+            throw new IllegalStateException("MOBILE_PROVIDER_PAYOUT_CALLBACK_URL must be configured");
         }
     }
 
@@ -34,7 +40,8 @@ public class MockPayoutClient {
             String recipientMsisdn,
             BigDecimal amount,
             String reference,
-            String idempotencyKey
+            String idempotencyKey,
+            UUID payoutId
     ) {
         validateConfiguration();
         if (senderMsisdn == null || senderMsisdn.isBlank()) {
@@ -51,7 +58,9 @@ public class MockPayoutClient {
                         senderMsisdn,
                         recipientMsisdn,
                         amount,
-                        reference
+                        reference,
+                        callbackUrl,
+                        payoutId
                 ))
                 .retrieve()
                 .body(MockPayoutResponse.class);
@@ -72,7 +81,9 @@ public class MockPayoutClient {
             String senderMsisdn,
             String recipientMsisdn,
             BigDecimal amount,
-            String reference
+            String reference,
+            String callbackUrl,
+            UUID clientPayoutId
     ) {}
 
     public record MockPayoutResponse(
